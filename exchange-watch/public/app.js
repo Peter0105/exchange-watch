@@ -13,7 +13,6 @@ const els = {
   statusText: document.querySelector("#statusText"),
   preference: document.querySelector("#preference"),
   preferenceValue: document.querySelector("#preferenceValue"),
-  threshold: document.querySelector("#threshold"),
   interval: document.querySelector("#interval"),
   refresh: document.querySelector("#refresh"),
   bestUsdt: document.querySelector("#bestUsdt"),
@@ -146,9 +145,6 @@ async function loadAlertStatus() {
       els.preference.value = status.preferencePercent;
       els.preferenceValue.textContent = status.preferencePercent;
     }
-    if (status.thresholdKrw != null) {
-      els.threshold.value = status.thresholdKrw;
-    }
   } catch {
     // The dashboard can still work even when alert status is unavailable.
   }
@@ -156,15 +152,14 @@ async function loadAlertStatus() {
 
 async function saveAlertSettings() {
   const preferencePercent = Number(els.preference.value);
-  const thresholdKrw = Number(els.threshold.value);
   try {
     const res = await fetch("/api/alerts/settings", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ preferencePercent, thresholdKrw }),
+      body: JSON.stringify({ preferencePercent }),
     });
     if (!res.ok) throw new Error(`설정 저장 실패 ${res.status}`);
-    setStatus("live", `알림 기준 저장 · 우대 ${preferencePercent}% · ${thresholdKrw}원`);
+    setStatus("live", `알림 기준 저장 · 우대 ${preferencePercent}%`);
   } catch (error) {
     setStatus("error", error.message);
   }
@@ -188,7 +183,6 @@ els.preference.addEventListener("change", () => {
   saveAlertSettings();
   loadRates();
 });
-els.threshold.addEventListener("change", saveAlertSettings);
 els.interval.addEventListener("change", schedule);
 els.refresh.addEventListener("click", loadRates);
 

@@ -95,7 +95,7 @@ h1 {
 
 .controls {
   display: grid;
-  grid-template-columns: minmax(260px, 1fr) 160px 180px auto;
+  grid-template-columns: minmax(260px, 1fr) 180px auto;
   align-items: end;
   gap: 12px;
   margin-bottom: 18px;
@@ -135,15 +135,6 @@ button {
 }
 
 select {
-  width: 100%;
-  border: 0;
-  border-bottom: 1px solid var(--line);
-  background: transparent;
-  color: var(--ink);
-  padding: 4px 0;
-}
-
-input[type="number"] {
   width: 100%;
   border: 0;
   border-bottom: 1px solid var(--line);
@@ -315,6 +306,53 @@ td strong {
   line-height: 1.55;
 }
 
+.info-section {
+  margin-top: 12px;
+  padding: 28px;
+  background: #1f2b28;
+  color: #f8fbf8;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.info-intro {
+  display: grid;
+  gap: 10px;
+  max-width: 860px;
+  margin-bottom: 22px;
+}
+
+.info-intro h2 {
+  font-size: 24px;
+}
+
+.info-intro p,
+.info-grid p {
+  margin: 0;
+  color: #cfd8d4;
+  line-height: 1.7;
+  font-size: 14px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.info-grid article {
+  padding: 18px;
+  min-height: 190px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+}
+
+.info-grid h3 {
+  margin: 0 0 10px;
+  font-size: 16px;
+}
+
 .warning {
   color: var(--bad);
 }
@@ -322,7 +360,8 @@ td strong {
 @media (max-width: 920px) {
   .controls,
   .summary-grid,
-  .layout {
+  .layout,
+  .info-grid {
     grid-template-columns: 1fr;
   }
 
@@ -343,6 +382,10 @@ td strong {
 
   .metric {
     min-height: 112px;
+  }
+
+  .info-section {
+    padding: 22px 16px;
   }
 
   .exchange-card {
