@@ -7,7 +7,7 @@ const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const publicDir = join(__dirname, "public");
 const port = Number(process.env.PORT || process.env.EXCHANGE_WATCH_PORT || 4177);
 const defaultAlertThresholdKrw = Number(process.env.ALERT_THRESHOLD_KRW || 10);
-const defaultAlertPreferencePercent = Number(process.env.ALERT_PREFERENCE_PERCENT || 80);
+const defaultAlertPreferencePercent = Number(process.env.ALERT_PREFERENCE_PERCENT || 90);
 const alertPollIntervalMs = Number(process.env.ALERT_POLL_INTERVAL_MS || 60_000);
 const alertCooldownMs = Number(process.env.ALERT_COOLDOWN_MS || 10 * 60_000);
 const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN || "";
@@ -64,6 +64,11 @@ function todayKstYmd() {
     .replaceAll("-", "");
 }
 
+function todayKstDashed() {
+  const ymd = todayKstYmd();
+  return `${ymd.slice(0, 4)}-${ymd.slice(4, 6)}-${ymd.slice(6, 8)}`;
+}
+
 function hanaUrl() {
   const ymd = todayKstYmd();
   return `https://www.kebhana.com/cms/rate/wpfxd651_01i_01.do?ajax=true&curCd=USD&tmpInqStrDt=${ymd}&inqStrDt=${ymd}&pbldDvCd=0`;
@@ -79,6 +84,28 @@ function toNumber(value) {
 
 function stripTags(value) {
   return value.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function normalizeBankNoticeTime(value) {
+  if (!value) return null;
+  const text = String(value).trim();
+
+  let match = text.match(/(\d{4})년(\d{2})월(\d{2})일\s*(\d{2})시(\d{2})분(\d{2})초/);
+  if (match) return `${match[1]}-${match[2]}-${match[3]} ${match[4]}:${match[5]}:${match[6]}`;
+
+  match = text.match(/(\d{8})\s+(\d{2}):(\d{2}):(\d{2})/);
+  if (match) return `${match[1].slice(0, 4)}-${match[1].slice(4, 6)}-${match[1].slice(6, 8)} ${match[2]}:${match[3]}:${match[4]}`;
+
+  match = text.match(/(\d{4})\.(\d{2})\.(\d{2})(?:\s+(\d{2}):(\d{2}):(\d{2}))?/);
+  if (match) {
+    const time = match[4] ? `${match[4]}:${match[5]}:${match[6]}` : "최종고시";
+    return `${match[1]}-${match[2]}-${match[3]} ${time}`;
+  }
+
+  match = text.match(/(\d{2}):(\d{2}):(\d{2})/);
+  if (match) return `${todayKstDashed()} ${match[1]}:${match[2]}:${match[3]}`;
+
+  return text.replace(/\s*\(\d+회차\)\s*/g, "").replace(/\s*기준\s*/g, "").trim();
 }
 
 function applyCashPreference(baseRate, postedRate, preferencePercent, direction) {
@@ -222,7 +249,7 @@ function parseHanaRate(html, preferencePercent) {
     preferredCashBuy: applyCashPreference(baseRate, cashBuy, preferencePercent, "buy"),
     preferredCashSell: applyCashPreference(baseRate, cashSell, preferencePercent, "sell"),
     preferencePercent,
-    noticeTime: timeMatch ? `${timeMatch[1]} ${timeMatch[2]} (${timeMatch[3]}회차)` : null,
+    noticeTime: normalizeBankNoticeTime(timeMatch ? `${timeMatch[1]} ${timeMatch[2]}` : null),
     timestamp: new Date().toISOString(),
     rawSource: hanaUrl(),
   };
@@ -235,7 +262,6 @@ function parseKbRate(html, preferencePercent) {
   if (!firstRowMatch) throw new Error("KB USD row not found");
 
   const cells = [...firstRowMatch[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map((match) => stripTags(match[1]));
-  const round = cells[0];
   const time = cells[1];
   const baseRate = toNumber(cells[2]);
   const send = toNumber(cells[4]);
@@ -259,7 +285,7 @@ function parseKbRate(html, preferencePercent) {
     preferredCashBuy: applyCashPreference(baseRate, cashBuy, preferencePercent, "buy"),
     preferredCashSell: applyCashPreference(baseRate, cashSell, preferencePercent, "sell"),
     preferencePercent,
-    noticeTime: time ? `${todayKstYmd()} ${time} (${round}회차)` : null,
+    noticeTime: normalizeBankNoticeTime(time ? `${todayKstYmd()} ${time}` : null),
     timestamp: new Date().toISOString(),
     rawSource: sources.kbUsdKrw,
   };
@@ -293,7 +319,7 @@ function parseWooriRate(html, preferencePercent) {
     preferredCashBuy: applyCashPreference(baseRate, cashBuy, preferencePercent, "buy"),
     preferredCashSell: applyCashPreference(baseRate, cashSell, preferencePercent, "sell"),
     preferencePercent,
-    noticeTime: date ? `${date} 기준` : infoMatch?.[1]?.trim() ?? null,
+    noticeTime: normalizeBankNoticeTime(date ?? infoMatch?.[1]?.trim()),
     timestamp: new Date().toISOString(),
     rawSource: sources.wooriUsdKrw,
   };
@@ -315,7 +341,7 @@ async function getNaverFallback(preferencePercent) {
     preferredCashBuy: baseRate,
     preferredCashSell: baseRate,
     preferencePercent,
-    noticeTime: info.localTradedAt ? `${info.localTradedAt} (${info.degreeCount}회차)` : null,
+    noticeTime: normalizeBankNoticeTime(info.localTradedAt),
     timestamp: new Date().toISOString(),
     warning: "하나은행 상세 환율 파싱 실패로 네이버 매매기준율만 표시합니다.",
     rawSource: sources.naverUsdKrw,

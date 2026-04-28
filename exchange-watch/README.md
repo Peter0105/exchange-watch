@@ -50,7 +50,7 @@ $env:KAKAO_ALIMTALK_WEBHOOK_SECRET="relay-secret"
 $env:KAKAO_ALIMTALK_TEMPLATE_CODE="EXCHANGE_GAP_ALERT"
 $env:KAKAO_ALIMTALK_RECIPIENTS="01012345678,01098765432"
 $env:ALERT_THRESHOLD_KRW=10
-$env:ALERT_PREFERENCE_PERCENT=80
+$env:ALERT_PREFERENCE_PERCENT=90
 npm run exchange:start
 ```
 
@@ -68,7 +68,7 @@ npm run exchange:start
     "lowPrice": "1,478.50원",
     "highName": "빗썸 USDT",
     "highPrice": "1,489.00원",
-    "preferencePercent": "80%",
+    "preferencePercent": "90%",
     "asOf": "2026. 4. 28. 오후 4:10:00"
   }
 }
@@ -82,7 +82,7 @@ Telegram은 빠른 개발 테스트용입니다. 일반 사용자 배포용 기�
 $env:TELEGRAM_BOT_TOKEN="123456789:AA..."
 $env:TELEGRAM_CHAT_IDS="123456789"
 $env:ALERT_THRESHOLD_KRW=10
-$env:ALERT_PREFERENCE_PERCENT=80
+$env:ALERT_PREFERENCE_PERCENT=90
 npm run exchange:start
 ```
 
