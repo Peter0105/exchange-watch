@@ -6,7 +6,8 @@ import { fileURLToPath } from "node:url";
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const publicDir = join(__dirname, "public");
 const port = Number(process.env.PORT || process.env.EXCHANGE_WATCH_PORT || 4177);
-const alertThresholdKrw = Number(process.env.ALERT_THRESHOLD_KRW || 10);
+const defaultAlertThresholdKrw = Number(process.env.ALERT_THRESHOLD_KRW || 10);
+const defaultAlertPreferencePercent = Number(process.env.ALERT_PREFERENCE_PERCENT || 80);
 const alertPollIntervalMs = Number(process.env.ALERT_POLL_INTERVAL_MS || 60_000);
 const alertCooldownMs = Number(process.env.ALERT_COOLDOWN_MS || 10 * 60_000);
 const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN || "";
@@ -29,6 +30,12 @@ let lastAlert = {
   spread: null,
   checkedAt: null,
   error: null,
+};
+
+let alertSettings = {
+  thresholdKrw: defaultAlertThresholdKrw,
+  preferencePercent: defaultAlertPreferencePercent,
+  updatedAt: null,
 };
 
 const mimeTypes = {
@@ -90,6 +97,19 @@ function applyCashPreference(baseRate, postedRate, preferencePercent, direction)
 function formatKrw(value) {
   if (value == null) return "-";
   return `${new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 2 }).format(value)}원`;
+}
+
+function clampNumber(value, fallback, min, max) {
+  const n = toNumber(value);
+  if (n == null) return fallback;
+  return Math.min(max, Math.max(min, n));
+}
+
+async function readRequestBody(req) {
+  const chunks = [];
+  for await (const chunk of req) chunks.push(chunk);
+  const text = Buffer.concat(chunks).toString("utf8");
+  return text ? JSON.parse(text) : {};
 }
 
 async function fetchJson(url) {
@@ -386,7 +406,7 @@ function buildAlert(data) {
   const low = items[0];
   const high = items[items.length - 1];
   const spread = Number((high.value - low.value).toFixed(2));
-  if (spread < data.alertThresholdKrw) return null;
+  if (spread < alertSettings.thresholdKrw) return null;
 
   const middle = items
     .slice(1, -1)
@@ -458,10 +478,9 @@ async function sendTelegram(message) {
 }
 
 async function checkAlerts() {
-  const requestUrl = new URL(`http://localhost/api/rates?preference=${process.env.ALERT_PREFERENCE_PERCENT || 80}`);
+  const requestUrl = new URL(`http://localhost/api/rates?preference=${alertSettings.preferencePercent}`);
   try {
     const data = await getRates(requestUrl);
-    data.alertThresholdKrw = alertThresholdKrw;
     const alert = buildAlert(data);
     lastAlert.checkedAt = new Date().toISOString();
     lastAlert.error = null;
@@ -539,12 +558,35 @@ const server = createServer(async (req, res) => {
           enabled: Boolean(telegramBotToken && telegramChatIds.length),
           kakaoAlimtalkEnabled: Boolean(kakaoAlimtalkWebhookUrl && kakaoAlimtalkRecipients.length),
           telegramEnabled: Boolean(telegramBotToken && telegramChatIds.length),
-          thresholdKrw: alertThresholdKrw,
+          thresholdKrw: alertSettings.thresholdKrw,
+          preferencePercent: alertSettings.preferencePercent,
+          settingsUpdatedAt: alertSettings.updatedAt,
           pollIntervalMs: alertPollIntervalMs,
           cooldownMs: alertCooldownMs,
           lastAlert,
         }),
       );
+      return;
+    }
+
+    if (requestUrl.pathname === "/api/alerts/settings" && req.method === "POST") {
+      const body = await readRequestBody(req);
+      alertSettings = {
+        thresholdKrw: clampNumber(body.thresholdKrw, alertSettings.thresholdKrw, 0, 500),
+        preferencePercent: clampNumber(body.preferencePercent, alertSettings.preferencePercent, 0, 100),
+        updatedAt: new Date().toISOString(),
+      };
+      lastAlert = {
+        ...lastAlert,
+        key: null,
+        sentAt: 0,
+      };
+      res.writeHead(200, {
+        "content-type": "application/json; charset=utf-8",
+        "cache-control": "no-store",
+      });
+      res.end(JSON.stringify({ ok: true, settings: alertSettings }));
+      checkAlerts();
       return;
     }
 
@@ -557,7 +599,7 @@ const server = createServer(async (req, res) => {
 
 server.listen(port, "0.0.0.0", () => {
   console.log(`Exchange Watch running at http://localhost:${port}`);
-  console.log(`Alert monitor: threshold ${alertThresholdKrw} KRW, interval ${alertPollIntervalMs}ms`);
+  console.log(`Alert monitor: threshold ${alertSettings.thresholdKrw} KRW, preference ${alertSettings.preferencePercent}%, interval ${alertPollIntervalMs}ms`);
   checkAlerts();
   setInterval(checkAlerts, alertPollIntervalMs);
 });

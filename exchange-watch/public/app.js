@@ -13,6 +13,7 @@ const els = {
   statusText: document.querySelector("#statusText"),
   preference: document.querySelector("#preference"),
   preferenceValue: document.querySelector("#preferenceValue"),
+  threshold: document.querySelector("#threshold"),
   interval: document.querySelector("#interval"),
   refresh: document.querySelector("#refresh"),
   bestUsdt: document.querySelector("#bestUsdt"),
@@ -30,6 +31,7 @@ const els = {
 };
 
 let timer = null;
+let saveTimer = null;
 
 function money(value) {
   return value == null ? "-" : formatter.format(value);
@@ -135,6 +137,44 @@ async function loadRates() {
   }
 }
 
+async function loadAlertStatus() {
+  try {
+    const res = await fetch("/api/alerts/status", { cache: "no-store" });
+    if (!res.ok) return;
+    const status = await res.json();
+    if (status.preferencePercent != null) {
+      els.preference.value = status.preferencePercent;
+      els.preferenceValue.textContent = status.preferencePercent;
+    }
+    if (status.thresholdKrw != null) {
+      els.threshold.value = status.thresholdKrw;
+    }
+  } catch {
+    // The dashboard can still work even when alert status is unavailable.
+  }
+}
+
+async function saveAlertSettings() {
+  const preferencePercent = Number(els.preference.value);
+  const thresholdKrw = Number(els.threshold.value);
+  try {
+    const res = await fetch("/api/alerts/settings", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ preferencePercent, thresholdKrw }),
+    });
+    if (!res.ok) throw new Error(`설정 저장 실패 ${res.status}`);
+    setStatus("live", `알림 기준 저장 · 우대 ${preferencePercent}% · ${thresholdKrw}원`);
+  } catch (error) {
+    setStatus("error", error.message);
+  }
+}
+
+function queueSaveAlertSettings() {
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveAlertSettings, 350);
+}
+
 function schedule() {
   if (timer) clearInterval(timer);
   timer = setInterval(loadRates, Number(els.interval.value));
@@ -142,10 +182,16 @@ function schedule() {
 
 els.preference.addEventListener("input", () => {
   els.preferenceValue.textContent = els.preference.value;
+  queueSaveAlertSettings();
 });
-els.preference.addEventListener("change", loadRates);
+els.preference.addEventListener("change", () => {
+  saveAlertSettings();
+  loadRates();
+});
+els.threshold.addEventListener("change", saveAlertSettings);
 els.interval.addEventListener("change", schedule);
 els.refresh.addEventListener("click", loadRates);
 
 schedule();
+await loadAlertStatus();
 loadRates();

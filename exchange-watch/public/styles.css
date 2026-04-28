@@ -95,7 +95,7 @@ h1 {
 
 .controls {
   display: grid;
-  grid-template-columns: minmax(260px, 1fr) 180px auto;
+  grid-template-columns: minmax(260px, 1fr) 160px 180px auto;
   align-items: end;
   gap: 12px;
   margin-bottom: 18px;
@@ -135,6 +135,15 @@ button {
 }
 
 select {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  padding: 4px 0;
+}
+
+input[type="number"] {
   width: 100%;
   border: 0;
   border-bottom: 1px solid var(--line);
