@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Exchange Watch</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <h1>Exchange Watch</h1>
+          <p>은행 USD 환전가와 업비트/빗썸 USDT 가격을 실시간 비교합니다.</p>
+        </div>
+        <div class="status">
+          <span id="statusDot" class="dot"></span>
+          <span id="statusText">연결 준비</span>
+        </div>
+      </header>
+
+      <section class="controls" aria-label="조회 설정">
+        <label class="control">
+          <span>환율 우대율</span>
+          <strong><span id="preferenceValue">80</span>%</strong>
+          <input id="preference" type="range" min="0" max="100" step="5" value="80" />
+        </label>
+        <label class="control compact">
+          <span>새로고침</span>
+          <select id="interval">
+            <option value="5000">5초</option>
+            <option value="10000" selected>10초</option>
+            <option value="30000">30초</option>
+            <option value="60000">1분</option>
+          </select>
+        </label>
+        <button id="refresh" type="button">지금 갱신</button>
+      </section>
+
+      <section class="summary-grid" aria-label="요약">
+        <article class="metric">
+          <span>최저 USDT</span>
+          <strong id="bestUsdt">-</strong>
+          <small id="bestUsdtSource">-</small>
+        </article>
+        <article class="metric">
+          <span>은행 우대 적용 매수가</span>
+          <strong id="bestBankBuy">-</strong>
+          <small id="bestBankSource">-</small>
+        </article>
+        <article class="metric accent">
+          <span>USDT - 은행 매수가</span>
+          <strong id="premiumGap">-</strong>
+          <small>음수면 USDT가 더 저렴</small>
+        </article>
+        <article class="metric">
+          <span>거래소 간 차이</span>
+          <strong id="exchangeGap">-</strong>
+          <small>업비트 - 빗썸</small>
+        </article>
+      </section>
+
+      <section class="layout">
+        <section class="panel">
+          <div class="panel-head">
+            <h2>은행 환율</h2>
+            <span id="bankUpdated">-</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>은행</th>
+                  <th>매매기준율</th>
+                  <th>현찰 살 때</th>
+                  <th>우대 적용</th>
+                  <th>현찰 팔 때</th>
+                  <th>우대 적용</th>
+                  <th>송금</th>
+                </tr>
+              </thead>
+              <tbody id="bankRows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>USDT 거래소</h2>
+            <span id="cryptoUpdated">-</span>
+          </div>
+          <div id="cryptoRows" class="exchange-list"></div>
+        </section>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>비교 메모</h2>
+          <span id="asOf">-</span>
+        </div>
+        <div id="notes" class="notes"></div>
+      </section>
+    </main>
+
+    <script src="./app.js" type="module"></script>
+  </body>
+</html>

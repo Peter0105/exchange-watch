@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: exchange-watch
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm run exchange:start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_VERSION
+        value: 22.22.0

@@ -1,0 +1,19 @@
+{
+  "name": "naver-comment-scheduler",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22 <25"
+  },
+  "scripts": {
+    "start": "node naver-comment-scheduler.mjs task.json",
+    "booking:start": "node naver-booking-prep.mjs booking-task.example.json",
+    "blog:audit": "node blog-dwell-time-audit.mjs",
+    "blog:audit:sample": "node blog-dwell-time-audit.mjs samples/blog-post-example.md",
+    "exchange:start": "node exchange-watch/server.mjs"
+  },
+  "dependencies": {
+    "playwright": "^1.52.0"
+  }
+}
