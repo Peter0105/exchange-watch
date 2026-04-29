@@ -6,8 +6,8 @@ import { fileURLToPath } from "node:url";
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const publicDir = join(__dirname, "public");
 const port = Number(process.env.PORT || process.env.EXCHANGE_WATCH_PORT || 4177);
-const defaultAlertThresholdKrw = Number(process.env.ALERT_THRESHOLD_KRW || 10);
-const defaultAlertPreferencePercent = Number(process.env.ALERT_PREFERENCE_PERCENT || 90);
+const defaultAlertThresholdKrw = Number(process.env.ALERT_THRESHOLD_KRW || 15);
+const defaultAlertPreferencePercent = Number(process.env.ALERT_PREFERENCE_PERCENT || 95);
 const alertPollIntervalMs = Number(process.env.ALERT_POLL_INTERVAL_MS || 60_000);
 const alertCooldownMs = Number(process.env.ALERT_COOLDOWN_MS || 10 * 60_000);
 const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN || "";
@@ -43,6 +43,8 @@ const mimeTypes = {
   ".css": "text/css; charset=utf-8",
   ".js": "application/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8",
+  ".txt": "text/plain; charset=utf-8",
+  ".xml": "application/xml; charset=utf-8",
 };
 
 const sources = {
