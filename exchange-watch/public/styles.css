@@ -101,6 +101,33 @@ h1 {
   margin-bottom: 18px;
 }
 
+.content-brief {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.content-brief > div {
+  min-height: 150px;
+  padding: 22px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.content-brief h2 {
+  margin-bottom: 10px;
+  font-size: 20px;
+}
+
+.content-brief p {
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
 .control,
 button {
   min-height: 74px;
@@ -359,6 +386,7 @@ td strong {
 
 @media (max-width: 920px) {
   .controls,
+  .content-brief,
   .summary-grid,
   .layout,
   .info-grid {
