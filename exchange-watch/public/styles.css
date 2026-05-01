@@ -380,6 +380,60 @@ td strong {
   font-size: 16px;
 }
 
+.info-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.info-links a,
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 8px 12px;
+  color: #f8fbf8;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.text-page {
+  max-width: 860px;
+  padding-top: 52px;
+  padding-bottom: 70px;
+}
+
+.text-page h1 {
+  margin-top: 26px;
+  margin-bottom: 18px;
+}
+
+.text-page h2 {
+  margin-top: 28px;
+  margin-bottom: 10px;
+  font-size: 22px;
+}
+
+.text-page p,
+.text-page li {
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+.text-page ul {
+  padding-left: 22px;
+}
+
+.text-page .back-link {
+  color: var(--ink);
+  border-color: var(--line);
+  background: var(--surface);
+}
+
 .warning {
   color: var(--bad);
 }
